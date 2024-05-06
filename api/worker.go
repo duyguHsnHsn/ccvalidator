@@ -3,6 +3,7 @@ package api
 import (
 	"ccvalidator/luhn"
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
@@ -41,6 +42,7 @@ func processRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Processing validation for card number: %s\n", req.CardNumber)
 	isValid := luhn.Validate(req.CardNumber)
 	result := ValidationResult{
 		IsValid: isValid,
@@ -48,8 +50,11 @@ func processRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	if !isValid {
 		result.Message = "Credit card number is invalid"
+		log.Printf("Validation failed for card number: %s\n", req.CardNumber)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("Error encoding JSON response: %v\n", err)
+	}
 }
